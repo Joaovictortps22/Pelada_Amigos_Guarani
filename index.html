@@ -1,1 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Jogadores</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h2>Lista de Jogadores</h2>
+    <ul id="listaJogadores"></ul>
+    <input type="text" id="nomeJogador" placeholder="Nome do jogador">
+    <button onclick="adicionarJogador()">Adicionar Jogador</button>
 
+    <script>
+        async function carregarJogadores() {
+            const response = await fetch('jogadores.json');
+            const jogadores = await response.json();
+            atualizarLista(jogadores);
+        }
+
+        function atualizarLista(jogadores) {
+            const lista = document.getElementById('listaJogadores');
+            lista.innerHTML = '';
+            jogadores.forEach((jogador, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `${jogador} 
+                    <button onclick="editarJogador(${index})">Editar</button>
+                    <button onclick="removerJogador(${index})">Excluir</button>`;
+                lista.appendChild(li);
+            });
+        }
+
+        async function adicionarJogador() {
+            const nome = document.getElementById('nomeJogador').value;
+            if (!nome) return;
+            let jogadores = await obterJogadores();
+            jogadores.push(nome);
+            salvarJogadores(jogadores);
+        }
+
+        async function editarJogador(index) {
+            let jogadores = await obterJogadores();
+            const novoNome = prompt("Novo nome do jogador:", jogadores[index]);
+            if (novoNome) {
+                jogadores[index] = novoNome;
+                salvarJogadores(jogadores);
+            }
+        }
+
+        async function removerJogador(index) {
+            let jogadores = await obterJogadores();
+            jogadores.splice(index, 1);
+            salvarJogadores(jogadores);
+        }
+
+        async function obterJogadores() {
+            const response = await fetch('jogadores.json');
+            return await response.json();
+        }
+
+        function salvarJogadores(jogadores) {
+            fetch('jogadores.json', {
+                method: 'POST', // Simulação, pois JSON local não pode ser alterado diretamente
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(jogadores)
+            }).then(() => atualizarLista(jogadores));
+        }
+
+        carregarJogadores();
+    </script>
+</body>
+</html>
