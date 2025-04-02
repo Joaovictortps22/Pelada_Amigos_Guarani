@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Peladinhas</title>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
+            authDomain: "pelada-amigos-guarani.firebaseapp.com",
+            projectId: "pelada-amigos-guarani",
+            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+            messagingSenderId: "978676164397",
+            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+            measurementId: "G-LZ988SNECC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const jogadoresRef = collection(db, "jogadores");
+        const peladinhasRef = collection(db, "peladinhas");
+
+        let jogadoresSelecionados = [];
+        
+        async function carregarJogadores() {
+            const lista = document.getElementById("listaJogadores");
+            lista.innerHTML = "";
+            const snapshot = await getDocs(jogadoresRef);
+            snapshot.forEach(docSnapshot => {
+                const jogador = docSnapshot.data();
+                const id = docSnapshot.id;
+                const item = document.createElement("li");
+                item.innerHTML = `${jogador.nome}`;
+                item.classList.add("jogador-item");
+                item.onclick = () => selecionarJogador(id, item);
+                lista.appendChild(item);
+            });
+        }
+
+        async function carregarPeladinhas() {
+            const listaPeladinhas = document.getElementById("listaPeladinhas");
+            listaPeladinhas.innerHTML = "";
+            const snapshot = await getDocs(peladinhasRef);
+            snapshot.forEach(docSnapshot => {
+                const peladinha = docSnapshot.data();
+                const data = new Date(peladinha.dataPeladinha.seconds * 1000).toLocaleDateString("pt-BR");
+                
+                const card = document.createElement("div");
+                card.classList.add("card-peladinha");
+                card.innerHTML = `
+                    <h3>Peladinha: ${data}</h3>
+                    <button class="button-entrar bottom-card-peladinha" onclick="dadosDaPeladinha('${docSnapshot.id}')">Acessar Dados</button>
+                `;
+                listaPeladinhas.appendChild(card);
+            });
+        }
+
+        window.dadosDaPeladinha = function(idPeladinha) {
+            window.location.href = `dadosPeladinha.html?id=${idPeladinha}`;
+        };
+
+        function selecionarJogador(id, item) {
+            if (jogadoresSelecionados.includes(id)) {
+                jogadoresSelecionados = jogadoresSelecionados.filter(jogadorId => jogadorId !== id);
+                item.classList.remove("selecionado");
+            } else {
+                jogadoresSelecionados.push(id);
+                item.classList.add("selecionado");
+            }
+        }
+
+        async function criarPeladinha() {
+            if (jogadoresSelecionados.length === 0) {
+                abrirModal("Erro", "Selecione pelo menos um jogador para a peladinha.");
+                return;
+            }
+            const dataPeladinha = new Date();
+            dataPeladinha.setHours(0, 0, 0, 0);
+
+            await addDoc(peladinhasRef, {
+                dataPeladinha: dataPeladinha,
+                jogadores: jogadoresSelecionados
+            });
+
+            abrirModal("Sucesso", "Peladinha criada com sucesso!");
+            carregarPeladinhas();
+        }
+
+        function abrirModal(titulo, mensagem) {
+            document.getElementById("modalTitulo").innerText = titulo;
+            document.getElementById("modalMensagem").innerText = mensagem;
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function fecharModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        document.getElementById("btnCriarPeladinha").addEventListener("click", criarPeladinha);
+        document.getElementById("fecharModal").addEventListener("click", fecharModal);
+        carregarJogadores();
+        carregarPeladinhas();
+    </script>
+    
+    <style>
+        body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; }
+        .container { text-align: center; margin-top: 20px; }
+        .jogador-item { cursor: pointer; padding: 10px; border: 1px solid #fff; margin: 5px; display: inline-block; }
+        .selecionado { background-color: #1db954; color: black; }
+        .button-criar { background-color: #1db954; color: #fff; padding: 15px 30px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 8px; }
+        .button-modal { background-color: rgb(56, 56, 255); color: #fff; padding: 15px 30px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 8px; }
+        .button-entrar { background-color: orange; color: #fff; padding: 15px 30px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 8px; }
+        .card-peladinha { background: #1e1e1e; padding: 20px; margin: 10px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .card-peladinha { margin-top: 35px;}
+        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        #modal button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tem peladinha hoje?</h1>
+        <h3>Selecione os jogadores:</h3>
+        <ul id="listaJogadores"></ul>
+        <button id="btnCriarPeladinha" class="button-criar">Criar Peladinha</button>
+        <div id="listaPeladinhas"></div>
+    </div>
+
+    <div id="modal">
+        <h2 id="modalTitulo"></h2>
+        <p id="modalMensagem"></p>
+        <button class="button-modal" id="fecharModal">OK</button>
+    </div>
+</body>
+</html>

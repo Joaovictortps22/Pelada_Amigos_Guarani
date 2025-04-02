@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/estilos/style-jogadores.css">
+    <title>Toca No Seu Pai</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-PT77XEZESM');
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
+            authDomain: "pelada-amigos-guarani.firebaseapp.com",
+            projectId: "pelada-amigos-guarani",
+            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+            messagingSenderId: "978676164397",
+            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+            measurementId: "G-LZ988SNECC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const jogadoresRef = collection(db, "jogadores");
+
+        async function carregarJogadores() {
+            const lista = document.getElementById("listaJogadores");
+            lista.innerHTML = "";
+            const snapshot = await getDocs(jogadoresRef);
+            snapshot.forEach(docSnapshot => {
+                const jogador = docSnapshot.data();
+                const id = docSnapshot.id;
+                const item = document.createElement("li");
+                item.innerHTML = `
+                    ${jogador.nome}
+                    <div class="icons">
+                        <button class="icon-btn" onclick="abrirModalEdicao('${id}', '${jogador.nome}')">
+                            <img src="https://cdn-icons-png.flaticon.com/512/1160/1160515.png" alt="Editar">
+                        </button>
+                        <button class="icon-btn" onclick="abrirModalExclusao('${id}')">
+                            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828774.png" alt="Excluir">
+                        </button>
+                    </div>
+                `;
+                lista.appendChild(item);
+            });
+        }
+
+        document.getElementById("btnAdicionar").addEventListener("click", async () => {
+            const nome = document.getElementById("inputNome").value;
+            if (nome.trim() !== "") {
+                await addDoc(jogadoresRef, { nome });
+                document.getElementById("inputNome").value = "";
+                carregarJogadores();
+            }
+        });
+
+        window.abrirModalExclusao = (id) => {
+            document.getElementById("modalExclusao").style.display = "flex";
+            document.getElementById("confirmarExclusao").onclick = () => excluirJogador(id);
+        };
+
+        window.fecharModalExclusao = () => {
+            document.getElementById("modalExclusao").style.display = "none";
+        };
+
+        window.excluirJogador = async (id) => {
+            const jogadorDoc = doc(db, "jogadores", id);
+            await deleteDoc(jogadorDoc);
+            carregarJogadores();
+            fecharModalExclusao();
+        };
+
+        window.abrirModalEdicao = (id, nome) => {
+            document.getElementById("modalEdicao").style.display = "flex";
+            document.getElementById("inputEditarNome").value = nome;
+            document.getElementById("confirmarEdicao").onclick = () => editarJogador(id);
+        };
+
+        window.fecharModalEdicao = () => {
+            document.getElementById("modalEdicao").style.display = "none";
+        };
+
+        window.editarJogador = async (id) => {
+            const novoNome = document.getElementById("inputEditarNome").value;
+            if (novoNome.trim() !== "") {
+                const jogadorDoc = doc(db, "jogadores", id);
+                await updateDoc(jogadorDoc, { nome: novoNome });
+                carregarJogadores();
+                fecharModalEdicao();
+            }
+        };
+
+        carregarJogadores();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Jogadores</h1>
+        <input type="text" id="inputNome" placeholder="Nome do jogador">
+        <button id="btnAdicionar">Adicionar</button>
+        <ul id="listaJogadores"></ul>
+    </div>
+    <div id="modalExclusao" class="modal">
+        <div class="modal-content">
+            <p>Tem certeza que deseja excluir este jogador?</p>
+            <button id="confirmarExclusao">Excluir</button>
+            <button onclick="fecharModalExclusao()">Cancelar</button>
+        </div>
+    </div>
+    <div id="modalEdicao" class="modal">
+        <div class="modal-content">
+            <p>Editar nome do jogador:</p>
+            <input type="text" id="inputEditarNome">
+            <button id="confirmarEdicao">Salvar</button>
+            <button onclick="fecharModalEdicao()">Cancelar</button>
+        </div>
+    </div>
+</body>
+</html>

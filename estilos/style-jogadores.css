@@ -1,0 +1,79 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+h1 {
+    color: #ffcc00;
+}
+input, button {
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+input {
+    width: 80%;
+    max-width: 300px;
+}
+button {
+    background-color: #ffcc00;
+    color: black;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #e6b800;
+}
+ul {
+    list-style: none;
+    padding: 0;
+}
+li {
+    background-color: #333;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.icons {
+    display: flex;
+    gap: 10px;
+}
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.icon-btn img {
+    width: 20px;
+    height: 20px;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: #222;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+.modal button {
+    margin: 10px;
+}
