@@ -13,7 +13,7 @@
             apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
             authDomain: "pelada-amigos-guarani.firebaseapp.com",
             projectId: "pelada-amigos-guarani",
-            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+            storageBucket: "peladinha.appspot.com",
             messagingSenderId: "978676164397",
             appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
             measurementId: "G-LZ988SNECC"
@@ -21,27 +21,42 @@
     
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-    
-        async function carregarDadosPeladinha() {
+
+        function dataPeladinha(peladinha){
+            return new Date(peladinha.dataPeladinha.seconds * 1000).toLocaleDateString("pt-BR");
+        }
+
+        async function peladinhaDoc() {
             const urlParams = new URLSearchParams(window.location.search);
             const idPeladinha = urlParams.get("id");
+
             if (!idPeladinha) {
                 alert("Peladinha não encontrada.");
-                return;
+                return null;
             }
-    
-            const peladinhaDoc = await getDoc(doc(db, "peladinhas", idPeladinha));
-            if (!peladinhaDoc.exists()) {
+
+            const peladinhaRef = doc(db, "peladinhas", idPeladinha);
+            const peladinhaSnapshot = await getDoc(peladinhaRef);
+
+            if (!peladinhaSnapshot.exists()) {
                 alert("Peladinha não encontrada.");
-                return;
+                return null;
             }
+
+            return peladinhaSnapshot;
+        }
     
-            const peladinha = peladinhaDoc.data();
-            document.getElementById("tituloPeladinha").innerText = "Peladinha - " + new Date(peladinha.dataPeladinha.seconds * 1000).toLocaleDateString("pt-BR");
-    
+        async function carregarDadosPeladinha() {
+            const peladinhaSnapshot = await peladinhaDoc();
+
+            if (!peladinhaSnapshot) return;
+
+            const peladinha = peladinhaSnapshot.data(); // Obtém os dados do documento
+            document.getElementById("tituloPeladinha").innerText = "Peladinha - " + dataPeladinha(peladinha);
+
             const listaJogadores = document.getElementById("listaJogadores");
             listaJogadores.innerHTML = "";
-    
+
             if (peladinha.jogadores && peladinha.jogadores.length > 0) {
                 const promessasJogadores = peladinha.jogadores.map(async (jogadorId) => {
                     const jogadorDoc = await getDoc(doc(db, "jogadores", jogadorId));
@@ -61,32 +76,130 @@
             }
         }
     
-        window.abrirModalEdicao = async function() {
+        window.abrirModalEdicao = async function () {
             const modal = document.getElementById("modalEdicao");
             modal.classList.add("ativo");
 
+            modal.onclick = function (event) {
+                if (event.target === modal) {
+                    modal.classList.remove("ativo");
+                }
+            };
+
             const listaEdicao = document.getElementById("listaEdicaoJogadores");
             listaEdicao.innerHTML = "";
-    
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const idPeladinha = urlParams.get("id");
+
+            if (!idPeladinha) {
+                alert("Peladinha não encontrada.");
+                return;
+            }
+
+            // Obter os dados da peladinha
+            const peladinhaDoc = await getDoc(doc(db, "peladinhas", idPeladinha));
+
+            if (!peladinhaDoc.exists()) {
+                alert("Peladinha não encontrada.");
+                return;
+            }
+
+            const peladinha = peladinhaDoc.data();
+
+            // Atualizar a data no título do modal
+            document.getElementById("dataTituloPeladinha").innerText = `no dia ${dataPeladinha(peladinha)}`;
+
+            // Obter os jogadores que estão na peladinha
+            const jogadoresNaPeladinha = peladinha.jogadores || [];
+
+            // Obter a lista geral de jogadores
             const jogadoresSnapshot = await getDocs(collection(db, "jogadores"));
             jogadoresSnapshot.forEach(doc => {
                 const jogador = doc.data();
                 const item = document.createElement("li");
+
+                // Criar botão de estado
+                const botaoEstado = document.createElement("button");
+
+                // Verifica se o jogador está na peladinha
+                const estaNaPeladinha = jogadoresNaPeladinha.includes(doc.id);
+
+                botaoEstado.innerText = estaNaPeladinha ? "Dentro" : "Fora";
+                botaoEstado.dataset.estado = estaNaPeladinha ? "Dentro" : "Fora";
+                botaoEstado.style.backgroundColor = estaNaPeladinha ? "#00cc66" : "#ff4d4d";
+                botaoEstado.classList.add("botao-estado");
+
+                // Alternar status ao clicar
+                botaoEstado.onclick = function () {
+                    if (botaoEstado.dataset.estado === "Fora") {
+                        botaoEstado.innerText = "Dentro";
+                        botaoEstado.dataset.estado = "Dentro";
+                        botaoEstado.style.backgroundColor = "#00cc66";
+                    } else {
+                        botaoEstado.innerText = "Fora";
+                        botaoEstado.dataset.estado = "Fora";
+                        botaoEstado.style.backgroundColor = "#ff4d4d";
+                    }
+                };
+
                 item.innerText = jogador.nome;
+                item.appendChild(botaoEstado);
                 listaEdicao.appendChild(item);
             });
-        }
+        };
     
         window.fecharModal = function() {
-            const modal = document.getElementById("modalEdicao");
-            modal.classList.remove("ativo");
-        }
+            document.getElementById("modalEdicao").classList.remove("ativo");
+        };
+
+        window.salvarEdicaoJogadores = async function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idPeladinha = urlParams.get("id");
+
+            if (!idPeladinha) {
+                alert("Peladinha não encontrada.");
+                return;
+            }
+
+            const lista = document.getElementById("listaEdicaoJogadores").children;
+            const novosJogadores = [];
+
+            const jogadoresSnapshot = await getDocs(collection(db, "jogadores"));
+
+            // Mapeia nomes para IDs
+            const nomeToId = {};
+            jogadoresSnapshot.forEach(doc => {
+                const jogador = doc.data();
+                nomeToId[jogador.nome] = doc.id;
+            });
+
+            for (let item of lista) {
+                const nome = item.childNodes[0].nodeValue.trim();
+                const botao = item.querySelector("button");
+
+                if (botao.dataset.estado === "Dentro") {
+                    const id = nomeToId[nome];
+                    if (id) {
+                        novosJogadores.push(id);
+                    }
+                }
+            }
+
+            // Atualiza o documento no Firestore
+            await updateDoc(doc(db, "peladinhas", idPeladinha), {
+                jogadores: novosJogadores
+            });
+
+            fecharModal();
+            await carregarDadosPeladinha(); // Atualiza a lista principal após salvar
+        };
     
         document.addEventListener("DOMContentLoaded", carregarDadosPeladinha);
     </script>
     
     <style>
-        body {
+         body {
             background-color: #121212;
             color: #fff;
             font-family: Arial, sans-serif;
@@ -105,12 +218,15 @@
             padding: 10px;
             border: 1px solid #fff;
             margin: 5px auto;
-            display: block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             width: 80%;
             max-width: 300px;
             border-radius: 5px;
-            text-align: center;
+            text-align: left;
             font-size: 18px;
+            background-color: #222;
         }
 
         button {
@@ -129,7 +245,18 @@
             background-color: #0077cc;
         }
 
-        /* Estilização do Modal */
+        .botao-estado {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            transition: 0.3s;
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -137,12 +264,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(5px);
             justify-content: center;
             align-items: center;
             opacity: 0;
             transition: opacity 0.3s ease;
+            z-index: 1000;
         }
 
         .modal.ativo {
@@ -151,74 +279,87 @@
         }
 
         .modal-content {
-        background: #fff;
-        color: #000;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        width: 90%; /* Mantém um espaço nas laterais */
-        max-width: 400px; /* Evita que o modal fique muito largo */
-        max-height: 90vh; /* Evita que o modal ocupe toda a altura da tela */
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        transform: scale(0.8);
-        transition: transform 0.3s ease;
-        margin: 10px; /* Espaço das bordas da tela */
-    }
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            margin: 10px;
+            overflow-y: auto;
+        }
 
         .modal.ativo .modal-content {
             transform: scale(1);
         }
 
         .buttons {
+            display: flex;
+            justify-content: space-between;
             margin-top: 20px;
         }
 
         .buttons button {
-            margin: 5px;
-            padding: 10px 20px;
+            flex: 1;
+            padding: 10px;
             font-size: 16px;
             cursor: pointer;
             border-radius: 5px;
             border: none;
             transition: 0.3s;
+            margin: 0 5px;
         }
 
-        .buttons button:first-child {
+        .btn-cancelar {
             background-color: #ff4d4d;
             color: white;
         }
 
-        .buttons button:first-child:hover {
+        .btn-cancelar:hover {
             background-color: #cc0000;
         }
 
-        .buttons button:last-child {
+        .btn-salvar {
             background-color: #00cc66;
             color: white;
         }
 
-        .buttons button:last-child:hover {
-            background-color: #008844;
+        .btn-salvar:hover {
+            background-color: #00994d;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 id="tituloPeladinha">Dados da Peladinha</h1>
-        <h3>Jogadores:</h3>
-        <ul id="listaJogadores"></ul>
-        <button onclick="abrirModalEdicao()">Editar Jogadores</button>
-    </div>
+    <h1 id="tituloPeladinha">Dados da Peladinha</h1>
+    <h3>Jogadores:</h3>
+    <ul id="listaJogadores"></ul>
+    <button onclick="abrirModalEdicao()">Editar Jogadores</button>
 
     <div id="modalEdicao" class="modal">
         <div class="modal-content">
-            <h2>Editar Jogadores</h2>
+            <h2 style="color: black;">Editar Jogadores</h2>
+            <h3 style="color: black;">Quem participou da pelada?</h3>
+            <h3 id="dataTituloPeladinha" style="color: black;"></h3>
             <ul id="listaEdicaoJogadores"></ul>
             <div class="buttons">
-                <button onclick="fecharModal()">Cancelar</button>
-                <button onclick="fecharModal()">Salvar</button>
+                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarEdicaoJogadores()">Salvar</button>
             </div>
         </div>
     </div>
+
+    <!-- <script>
+        function abrirModalEdicao() {
+            document.getElementById("modalEdicao").classList.add("ativo");
+        }
+
+        function fecharModal() {
+            document.getElementById("modalEdicao").classList.remove("ativo");
+        }
+    </script> -->
 </body>
 </html>
