@@ -1,8 +1,9 @@
 /* Reset básico */
-body, h1, h2, button {
+* {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
 }
 
 body {
@@ -14,51 +15,65 @@ body {
     justify-content: center;
     height: 100vh;
     padding: 20px;
+    text-align: center;
 }
 
-/* Estilo da seção de Criar Peladinha */
+/* Cabeçalho */
+header {
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    background: linear-gradient(45deg, #00c853, #1976d2);
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Seção Criar Peladinha */
 .nova-peladinha {
     background-color: #1e1e1e;
     padding: 20px;
     border-radius: 10px;
     width: 90%;
     max-width: 600px;
-    margin-bottom: 20px;
+    margin: 20px 0;
     box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    animation: fadeIn 1s ease-in-out;
 }
 
-/* Estilo do título */
 .nova-peladinha h2 {
     font-size: 20px;
 }
 
 /* Botão Criar Peladinha */
 .btn-criar {
-    background-color: #00c853;
+    background: linear-gradient(45deg, #00c853, #009624);
     color: white;
     font-size: 16px;
     border: none;
-    padding: 12px 16px;
+    padding: 12px 20px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
 }
 
-/* Ícone dentro do botão */
 .btn-criar img {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
-/* Efeito hover */
 .btn-criar:hover {
-    background-color: #009624;
+    background: linear-gradient(45deg, #009624, #007f3d);
+    transform: scale(1.05);
 }
 
 /* Container Principal */
@@ -70,17 +85,22 @@ body {
     width: 90%;
     max-width: 400px;
     box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
+    animation: fadeIn 1s ease-in-out;
 }
 
-/* Estilo do título principal */
-.container h1 {
+.container h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+body h2{
     font-size: 24px;
     margin-bottom: 20px;
 }
 
 /* Botão Ver Jogadores */
 .container button {
-    background-color: #1976d2;
+    background: linear-gradient(45deg, #1976d2, #0d47a1);
     color: white;
     font-size: 16px;
     border: none;
@@ -88,8 +108,29 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: 0.3s;
+    box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+main {
+    display: grid;
+    justify-items: center;
+    gap: 20px; /* Espaçamento entre os elementos */
+    padding: 20px;
 }
 
 .container button:hover {
-    background-color: #0d47a1;
+    background: linear-gradient(45deg, #0d47a1, #002171);
+    transform: scale(1.05);
+}
+
+/* Animação de FadeIn */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

@@ -16,68 +16,66 @@
     </script>
 </head>
 <body>
-    <!-- Nova Div para Criar Peladinha -->
-    <div class="nova-peladinha">
-        <h2>Tem pelada hoje?</h2>
-        <button id="btn-criar-peladinha" class="btn-criar">
-            <span>Criar peladinha</span>
-            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais">
-        </button>
-    </div>
+    <h2>Bem-vindo!</h2>
+    <header>
+        <h2>⚽ Toca No Seu Pai ⚽</h2>
+    </header>
 
-    <div class="container">
-        <h1>Bem-vindo!</h1>
-        <button onclick="window.location.href='jogadores.html'">Ver Jogadores</button>
-    </div>
-</body>
+    <main>
+        <!-- Seção Criar Peladinha -->
+        <section class="nova-peladinha">
+            <h2>Tem pelada hoje?</h2>
+            <button id="btn-criar-peladinha" class="btn-criar">
+                <span>Criar peladinha</span>
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais">
+            </button>
+        </section>
 
-<!-- Firebase SDK -->
-<script type="module">
-    // Configuração do Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+        <!-- Container Principal -->
+        <section class="container">
+            <button onclick="window.location.href='jogadores.html'">Ver Jogadores</button>
+        </section>
+    </main>
 
-    // Configuração do projeto Firebase (substitua pelos seus dados)
-    const firebaseConfig = {
-        apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
-        authDomain: "pelada-amigos-guarani.firebaseapp.com",
-        projectId: "pelada-amigos-guarani",
-        storageBucket: "pelada-amigos-guarani.firebasestorage.app",
-        messagingSenderId: "978676164397",
-        appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
-        measurementId: "G-LZ988SNECC"
-    };
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-    // Inicializa Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD83XBv0kg9yhr5TcewtVfLJRpDJmPic",
+            authDomain: "pelada-amigos-guarani.firebaseapp.com",
+            projectId: "pelada-amigos-guarani",
+            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+            messagingSenderId: "978676164397",
+            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+            measurementId: "G-LZ988SNECC"
+        };
 
-    // Função para Criar Peladinha
-    async function criarPeladinha() {
-        try {
-            // Cria data com hora zerada
-            let dataAtual = new Date();
-            dataAtual.setHours(0, 0, 0, 0);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-            // Array vazio para jogadores (por enquanto)
-            let jogadores = [];
+        async function criarPeladinha() {
+            try {
+                let dataAtual = new Date();
+                dataAtual.setHours(0, 0, 0, 0);
+                let jogadores = [];
 
-            // Adiciona ao Firestore
-            const docRef = await addDoc(collection(db, "peladinhas"), {
-                dataPeladinha: Timestamp.fromDate(dataAtual),
-                jogadores: jogadores
-            });
+                const docRef = await addDoc(collection(db, "peladinhas"), {
+                    dataPeladinha: Timestamp.fromDate(dataAtual),
+                    jogadores: jogadores
+                });
 
-            alert("Peladinha criada com sucesso! ID: " + docRef.id);
-        } catch (error) {
-            console.error("Erro ao criar peladinha:", error);
-            alert("Erro ao criar peladinha!");
+                alert("Peladinha criada com sucesso! ID: " + docRef.id);
+            } catch (error) {
+                console.error("Erro ao criar peladinha:", error);
+                alert("Erro ao criar peladinha!");
+            }
         }
-    }
 
-    // Adiciona evento ao botão
-    document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
-        window.location.href = "peladinhas.html";
-    });
-</script>
+        document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
+            window.location.href = "peladinhas.html";
+        });
+    </script>
+</body>
 </html>
