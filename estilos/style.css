@@ -93,6 +93,11 @@ header {
     margin-bottom: 20px;
 }
 
+body h2{
+    font-size: 24px;
+    margin-bottom: 20px; 
+}
+
 /* Botão Ver Jogadores */
 .container button {
     background: linear-gradient(45deg, #1976d2, #0d47a1);
