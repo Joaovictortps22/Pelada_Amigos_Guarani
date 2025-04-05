@@ -43,6 +43,7 @@ li {
 .icons {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 .icon-btn {
     background: none;
@@ -77,3 +78,23 @@ li {
 .modal button {
     margin: 10px;
 }
+
+.status-btn {
+    padding: 3px 8px;
+    border: none;
+    height: 35px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  
+  .status-btn.ativo {
+    background-color: #00cc66; /* Verde */
+  }
+  
+  .status-btn.inativo {
+    background-color: #ff4d4d; /* Vermelho */
+  }

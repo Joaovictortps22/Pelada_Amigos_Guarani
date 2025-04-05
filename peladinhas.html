@@ -33,11 +33,15 @@
             snapshot.forEach(docSnapshot => {
                 const jogador = docSnapshot.data();
                 const id = docSnapshot.id;
-                const item = document.createElement("li");
-                item.innerHTML = `${jogador.nome}`;
-                item.classList.add("jogador-item");
-                item.onclick = () => selecionarJogador(id, item);
-                lista.appendChild(item);
+
+                // Só adiciona se for ativo
+                if (jogador.active === true) {
+                    const item = document.createElement("li");
+                    item.innerHTML = `${jogador.nome}`;
+                    item.classList.add("jogador-item");
+                    item.onclick = () => selecionarJogador(id, item);
+                    lista.appendChild(item);
+                }
             });
         }
 
@@ -75,7 +79,7 @@
 
         async function criarPeladinha() {
             if (jogadoresSelecionados.length === 0) {
-                abrirModal("Erro", "Selecione pelo menos um jogador para a peladinha.");
+                abrirModal("Selecione jogadores", "Caso não veja jogadores para selecionar, va até a tela de jogadores e faça os cadastros.");
                 return;
             }
             const dataPeladinha = new Date();
@@ -93,17 +97,29 @@
         function abrirModal(titulo, mensagem) {
             document.getElementById("modalTitulo").innerText = titulo;
             document.getElementById("modalMensagem").innerText = mensagem;
-            document.getElementById("modal").style.display = "block";
+            document.getElementById("modal-overlay").style.display = "flex";
         }
 
-        function fecharModal() {
-            document.getElementById("modal").style.display = "none";
+        function fecharModal(event) {
+            if (event) event.stopPropagation();
+            document.getElementById("modal-overlay").style.display = "none";
         }
 
-        document.getElementById("btnCriarPeladinha").addEventListener("click", criarPeladinha);
-        document.getElementById("fecharModal").addEventListener("click", fecharModal);
-        carregarJogadores();
-        carregarPeladinhas();
+        window.onload = () => {
+            document.getElementById("modal-overlay").style.display = "none";
+
+            document.getElementById("modal-overlay").addEventListener("click", function (e) {
+                if (e.target.id === "modal-overlay") {
+                    fecharModal();
+                }
+            });
+
+            document.getElementById("btnCriarPeladinha").addEventListener("click", criarPeladinha);
+            document.getElementById("fecharModal").addEventListener("click", fecharModal);
+
+            carregarJogadores();
+            carregarPeladinhas();
+        };
     </script>
     
     <style>
@@ -116,8 +132,28 @@
         .button-entrar { background-color: orange; color: #fff; padding: 15px 30px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 8px; }
         .card-peladinha { background: #1e1e1e; padding: 20px; margin: 10px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .card-peladinha { margin-top: 35px;}
-        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         #modal button { margin-top: 10px; }
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal {
+            background: white;
+            color: black;
+            padding: 30px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -129,10 +165,12 @@
         <div id="listaPeladinhas"></div>
     </div>
 
-    <div id="modal">
-        <h2 id="modalTitulo"></h2>
-        <p id="modalMensagem"></p>
-        <button class="button-modal" id="fecharModal">OK</button>
+    <div id="modal-overlay" onclick="fecharModal(event)">
+        <div id="modal" onclick="event.stopPropagation()">
+          <h2 id="modalTitulo"></h2>
+          <p id="modalMensagem"></p>
+          <button class="button-modal" id="fecharModal">OK</button>
+        </div>
     </div>
 </body>
 </html>
