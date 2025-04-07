@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regras da Pelada</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
+      authDomain: "pelada-amigos-guarani.firebaseapp.com",
+      projectId: "pelada-amigos-guarani",
+      storageBucket: "pelada-amigos-guarani.appspot.com",
+      messagingSenderId: "978676164397",
+      appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+      measurementId: "G-LZ988SNECC"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const regrasRef = collection(db, "regrasPelada");
+
+    const ruleList = document.getElementById("ruleList");
+    const newRuleInput = document.getElementById("newRule");
+
+    async function carregarRegras() {
+        ruleList.innerHTML = "";
+        const snapshot = await getDocs(regrasRef);
+
+        snapshot.forEach((docSnap) => {
+            const regra = docSnap.data();
+            const id = docSnap.id;
+
+            const li = document.createElement("li");
+            li.className = "bg-gray-800 px-4 py-3 rounded flex justify-between items-center";
+
+            const span = document.createElement("span");
+            span.textContent = regra.descricaoRegra;
+            span.className = "flex-1";
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = regra.descricaoRegra;
+            input.className = "hidden flex-1 px-2 py-1 bg-gray-700 text-white rounded mr-2";
+
+            const buttons = document.createElement("div");
+            buttons.className = "flex gap-2";
+
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "✏️";
+            editBtn.className = "hover:text-yellow-400";
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "🗑️";
+            deleteBtn.className = "hover:text-red-400";
+
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Salvar";
+            saveBtn.className = "bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded hidden";
+
+            editBtn.onclick = () => {
+            input.classList.remove("hidden");
+            span.classList.add("hidden");
+            editBtn.classList.add("hidden");
+            deleteBtn.classList.add("hidden");
+            saveBtn.classList.remove("hidden");
+            };
+
+            saveBtn.onclick = async () => {
+            const novoTexto = input.value.trim();
+            if (novoTexto) {
+                await updateDoc(doc(db, "regrasPelada", id), {
+                descricaoRegra: novoTexto
+                });
+                carregarRegras(); // recarrega a lista para refletir a alteração
+            }
+            };
+
+            deleteBtn.onclick = async () => {
+            await deleteDoc(doc(db, "regrasPelada", id));
+            carregarRegras();
+            };
+
+            buttons.appendChild(editBtn);
+            buttons.appendChild(deleteBtn);
+            buttons.appendChild(saveBtn);
+
+            li.appendChild(span);
+            li.appendChild(input);
+            li.appendChild(buttons);
+            ruleList.appendChild(li);
+        });
+        }
+
+    document.getElementById("btnAdicionar").addEventListener("click", async () => {
+      const descricao = newRuleInput.value.trim();
+      if (descricao) {
+        await addDoc(regrasRef, { descricaoRegra: descricao });
+        newRuleInput.value = "";
+        carregarRegras();
+      }
+    });
+
+    carregarRegras();
+  </script>
+</head>
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-2xl bg-gray-900 rounded-2xl p-6 shadow-lg">
+    <h1 class="text-3xl font-bold mb-4">📜 Regras da Pelada</h1>
+
+    <!-- Lista de Regras -->
+    <ul id="ruleList" class="space-y-3 mb-6"></ul>
+
+    <!-- Formulário -->
+    <div class="flex gap-2">
+      <input
+        id="newRule"
+        type="text"
+        placeholder="Digite uma nova regra..."
+        class="flex-1 px-4 py-2 rounded bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        id="btnAdicionar"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-semibold"
+      >
+        Adicionar
+      </button>
+    </div>
+  </div>
+</body>
+</html>
