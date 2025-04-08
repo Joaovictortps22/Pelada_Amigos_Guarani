@@ -58,17 +58,28 @@
             listaJogadores.innerHTML = "";
 
             if (peladinha.jogadores && peladinha.jogadores.length > 0) {
-                const promessasJogadores = peladinha.jogadores.map(async (jogadorId) => {
-                    const jogadorDoc = await getDoc(doc(db, "jogadores", jogadorId));
-                    return jogadorDoc.exists() ? jogadorDoc.data().nome : "Jogador desconhecido";
+                const promessasJogadores = peladinha.jogadores.map(async (jogadorObj) => {
+                    const jogadorDoc = await getDoc(doc(db, "jogadores", jogadorObj.id));
+                    const nome = jogadorDoc.exists() ? jogadorDoc.data().nome : "Jogador desconhecido";
+                    return { id: jogadorObj.id, nome, gols: jogadorObj.gols };
                 });
 
-                let nomesJogadores = await Promise.all(promessasJogadores);
-                nomesJogadores.sort(); // Ordena alfabeticamente
+                let jogadores = await Promise.all(promessasJogadores);
+                jogadores.sort((a, b) => {
+                    if (b.gols !== a.gols) {
+                        return b.gols - a.gols;
+                    }
+                    return a.nome.localeCompare(b.nome);
+                });
 
-                nomesJogadores.forEach(nome => {
+                jogadores.forEach(({ id, nome, gols }) => {
                     const item = document.createElement("li");
-                    item.innerText = nome;
+                    item.innerHTML = `
+                        <span>${nome}</span>
+                        <span style="display: flex; align-items: center; gap: 5px; font-size: 18px;">
+                            <span style="cursor: pointer;" onclick="abrirModalGols({ id: '${id}', nome: '${nome}', gols: ${gols} }, '${peladinhaSnapshot.id}')">⚽</span> ${gols}
+                        </span>
+                    `;
                     listaJogadores.appendChild(item);
                 });
             } else {
@@ -117,33 +128,51 @@
             const jogadoresSnapshot = await getDocs(collection(db, "jogadores"));
             jogadoresSnapshot.forEach(doc => {
                 const jogador = doc.data();
+                const jogadorId = doc.id;
+
+                if (!jogador.active) return;
+
+                const jogadorNaPeladinha = jogadoresNaPeladinha.find(j => j.id === jogadorId);
+                const golsNaPeladinha = jogadorNaPeladinha ? jogadorNaPeladinha.gols : 0;
+                const estaNaPeladinha = !!jogadorNaPeladinha;
+
                 const item = document.createElement("li");
+                item.style.display = "flex";
+                item.style.justifyContent = "space-between";
+                item.style.alignItems = "center";
+                item.style.padding = "8px";
+                item.style.borderBottom = "1px solid #ccc";
 
-                // Criar botão de estado
+                const nomeSpan = document.createElement("span");
+                nomeSpan.textContent = jogador.nome;
+
                 const botaoEstado = document.createElement("button");
-
-                // Verifica se o jogador está na peladinha
-                const estaNaPeladinha = jogadoresNaPeladinha.includes(doc.id);
-
                 botaoEstado.innerText = estaNaPeladinha ? "Dentro" : "Fora";
                 botaoEstado.dataset.estado = estaNaPeladinha ? "Dentro" : "Fora";
-                botaoEstado.style.backgroundColor = estaNaPeladinha ? "#00cc66" : "#ff4d4d";
                 botaoEstado.classList.add("botao-estado");
 
-                // Alternar status ao clicar
-                botaoEstado.onclick = function () {
-                    if (botaoEstado.dataset.estado === "Fora") {
-                        botaoEstado.innerText = "Dentro";
-                        botaoEstado.dataset.estado = "Dentro";
-                        botaoEstado.style.backgroundColor = "#00cc66";
-                    } else {
-                        botaoEstado.innerText = "Fora";
-                        botaoEstado.dataset.estado = "Fora";
-                        botaoEstado.style.backgroundColor = "#ff4d4d";
-                    }
-                };
+                if (golsNaPeladinha > 0) {
+                    // Estiliza como desabilitado visualmente
+                    item.style.opacity = "0.8";
+                    botaoEstado.disabled = true;
+                    botaoEstado.style.cursor = "not-allowed";
+                    botaoEstado.style.backgroundColor = "#888";
+                } else {
+                    botaoEstado.style.backgroundColor = estaNaPeladinha ? "#00cc66" : "#ff4d4d";
+                    botaoEstado.onclick = function () {
+                        if (botaoEstado.dataset.estado === "Fora") {
+                            botaoEstado.innerText = "Dentro";
+                            botaoEstado.dataset.estado = "Dentro";
+                            botaoEstado.style.backgroundColor = "#00cc66";
+                        } else {
+                            botaoEstado.innerText = "Fora";
+                            botaoEstado.dataset.estado = "Fora";
+                            botaoEstado.style.backgroundColor = "#ff4d4d";
+                        }
+                    };
+                }
 
-                item.innerText = jogador.nome;
+                item.appendChild(nomeSpan);
                 item.appendChild(botaoEstado);
                 listaEdicao.appendChild(item);
             });
@@ -162,6 +191,21 @@
                 return;
             }
 
+            // Obtém os dados atuais da peladinha para preservar os gols existentes
+            const peladinhaRef = doc(db, "peladinhas", idPeladinha);
+            const peladinhaDocSnap = await getDoc(peladinhaRef);
+
+            if (!peladinhaDocSnap.exists()) {
+                alert("Peladinha não encontrada.");
+                return;
+            }
+
+            const peladinha = peladinhaDocSnap.data();
+            const golsMap = new Map();
+            (peladinha.jogadores || []).forEach(j => {
+                golsMap.set(j.id, j.gols || 0);
+            });
+
             const lista = document.getElementById("listaEdicaoJogadores").children;
             const novosJogadores = [];
 
@@ -175,27 +219,91 @@
             });
 
             for (let item of lista) {
-                const nome = item.childNodes[0].nodeValue.trim();
+                const nomeSpan = item.querySelector("span");
+                const nome = nomeSpan?.textContent?.trim();
+
                 const botao = item.querySelector("button");
 
-                if (botao.dataset.estado === "Dentro") {
-                    const id = nomeToId[nome];
-                    if (id) {
-                        novosJogadores.push(id);
+                const id = nomeToId[nome];
+                if (id) {
+                    const gols = golsMap.has(id) ? golsMap.get(id) : 0;
+
+                    if (botao.dataset.estado === "Dentro" || gols > 0) {
+                        // Jogador está dentro ou tem gols: manter
+                        novosJogadores.push({ id, gols });
                     }
                 }
             }
 
             // Atualiza o documento no Firestore
-            await updateDoc(doc(db, "peladinhas", idPeladinha), {
+            await updateDoc(peladinhaRef, {
                 jogadores: novosJogadores
             });
 
             fecharModal();
             await carregarDadosPeladinha(); // Atualiza a lista principal após salvar
         };
+
+        let jogadorSelecionado = null;
+        let idPeladinhaAtual = null;
+
+        function abrirModalGols(jogador, idPeladinha) {
+            jogadorSelecionado = jogador;
+            idPeladinhaAtual = idPeladinha;
+
+            document.getElementById("nomeJogadorModal").innerText = jogador.nome;
+            document.getElementById("inputGols").value = jogador.gols;
+            document.getElementById("modalGols").classList.add("ativo");
+        }
+
+        window.abrirModalGols = abrirModalGols;
+
+        window.fecharModalGols = function () {
+            document.getElementById("modalGols").classList.remove("ativo");
+            jogadorSelecionado = null;
+        };
+
+        window.alterarGols = function (valor) {
+            const input = document.getElementById("inputGols");
+            let gols = parseInt(input.value, 10) + valor;
+            input.value = Math.max(0, gols); // Evita valor negativo
+        };
+
+        window.salvarGols = async function () {
+            if (!jogadorSelecionado || !idPeladinhaAtual) return;
+
+            const novoValor = parseInt(document.getElementById("inputGols").value, 10);
+
+            const peladinhaRef = doc(db, "peladinhas", idPeladinhaAtual);
+            const peladinhaDocSnap = await getDoc(peladinhaRef);
+
+            if (!peladinhaDocSnap.exists()) {
+                alert("Peladinha não encontrada.");
+                return;
+            }
+
+            const peladinha = peladinhaDocSnap.data();
+
+            // Atualiza os gols na lista de jogadores da peladinha
+            peladinha.jogadores = peladinha.jogadores.map(j => {
+                if (j.id === jogadorSelecionado.id) {
+                    return { ...j, gols: novoValor };
+                }
+                return j;
+            });
+
+            // Atualiza a peladinha no Firestore
+            await updateDoc(peladinhaRef, {
+                jogadores: peladinha.jogadores
+            });
+
+            fecharModalGols();
+            carregarDadosPeladinha(); // Atualiza lista principal
+        };
     
         document.addEventListener("DOMContentLoaded", carregarDadosPeladinha);
+
+
     </script>
     
     <style>
@@ -227,6 +335,7 @@
             text-align: left;
             font-size: 18px;
             background-color: #222;
+            
         }
 
         button {
@@ -254,6 +363,11 @@
             transition: 0.3s;
             background-color: #ff4d4d;
             color: white;
+        }
+
+        .botao-estado:disabled {
+            opacity: 0.4;
+            pointer-events: none;
         }
 
         /* Modal */
@@ -337,7 +451,7 @@
     <h1 id="tituloPeladinha">Dados da Peladinha</h1>
     <h3>Jogadores:</h3>
     <ul id="listaJogadores"></ul>
-    <button onclick="abrirModalEdicao()">Editar Jogadores</button>
+    <button onclick="abrirModalEdicao()">Editar Participantes</button>
 
     <div id="modalEdicao" class="modal">
         <div class="modal-content">
@@ -348,6 +462,22 @@
             <div class="buttons">
                 <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
                 <button class="btn-salvar" onclick="salvarEdicaoJogadores()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para edição de gols -->
+    <div class="modal" id="modalGols">
+        <div class="modal-content">
+            <h2 id="nomeJogadorModal">Editar Gols</h2>
+            <input type="number" id="inputGols" value="0" readonly style="font-size: 24px; text-align: center; width: 80px;" />
+            <div class="buttons">
+                <button onclick="alterarGols(-1)">-</button>
+                <button onclick="alterarGols(1)">+</button>
+            </div>
+            <div class="buttons" style="margin-top: 10px;">
+                <button class="btn-cancelar" onclick="fecharModalGols()">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarGols()">Salvar</button>
             </div>
         </div>
     </div>

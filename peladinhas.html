@@ -7,7 +7,7 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyAD83XBv0kg9yhr5tKcewtVfLJRpDJmPic",
@@ -48,7 +48,10 @@
         async function carregarPeladinhas() {
             const listaPeladinhas = document.getElementById("listaPeladinhas");
             listaPeladinhas.innerHTML = "";
-            const snapshot = await getDocs(peladinhasRef);
+
+            const q = query(peladinhasRef, orderBy("dataPeladinha", "desc"));
+            const snapshot = await getDocs(q);
+
             snapshot.forEach(docSnapshot => {
                 const peladinha = docSnapshot.data();
                 const data = new Date(peladinha.dataPeladinha.seconds * 1000).toLocaleDateString("pt-BR");
@@ -79,15 +82,21 @@
 
         async function criarPeladinha() {
             if (jogadoresSelecionados.length === 0) {
-                abrirModal("Selecione jogadores", "Caso não veja jogadores para selecionar, va até a tela de jogadores e faça os cadastros.");
+                abrirModal("Selecione jogadores", "Caso não veja jogadores para selecionar, vá até a tela de jogadores e faça os cadastros.");
                 return;
             }
+
             const dataPeladinha = new Date();
             dataPeladinha.setHours(0, 0, 0, 0);
 
+            const jogadoresFormatados = jogadoresSelecionados.map(id => ({
+                id: id,
+                gols: 0
+            }));
+
             await addDoc(peladinhasRef, {
                 dataPeladinha: dataPeladinha,
-                jogadores: jogadoresSelecionados
+                jogadores: jogadoresFormatados
             });
 
             abrirModal("Sucesso", "Peladinha criada com sucesso!");
