@@ -1,109 +1,155 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toca No Seu Pai</title>
-    <link rel="stylesheet" href="estilos/style-home.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toca No Seu Pai</title>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-PT77XEZESM');
-    </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts (opcional para um visual mais estiloso) -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-PT77XEZESM');
+  </script>
 </head>
-<body>
-    <header>
-        <h2>⚽ Toca No Seu Pai ⚽</h2>
-    </header>
+<body class="bg-zinc-900 text-white min-h-screen flex flex-col items-center justify-start px-4 py-8">
 
-    <main>
-        <!-- Seção Criar Peladinha -->
-        <section class="container">
-            <button id="btn-criar-peladinha">
-                Peladinhas
-                <!-- <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais"> -->
-            </button>
-        </section>
-    
-        <!-- Container Principal -->
-        <section class="container">
-            <button onclick="window.location.href='jogadores.html'">Jogadores</button>
-        </section>
-    
-        <section class="container">
-            <button class="btn-artilheiros" onclick="window.location.href='artilheiros.html'">Artilheiros</button>
-        </section>
-    
-        <!-- Novo container com botão para Regras -->
-        <section class="container">
-            <button class="btn-regras" onclick="window.location.href='regras.html'">Regras</button>
-        </section>
+  <!-- Header -->
+  <header class="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white text-2xl font-bold py-6 rounded-lg shadow-lg text-center mb-8">
+    ⚽ Toca No Seu Pai ⚽
+  </header>
 
-        <section class="container">
-            <button class="btn-em-breve">
-                Presença
-                <span class="tag-em-breve">Em breve...</span>
-            </button>
-        </section>
-        
-        <section class="container">
-            <button class="btn-em-breve">
-                Churrasco
-                <span class="tag-em-breve">Em breve...</span>
-            </button>
-        </section>
-        
-        <section class="container">
-            <button class="btn-em-breve">
-                Sorteio Times
-                <span class="tag-em-breve">Em breve...</span>
-            </button>
-        </section>
-    </main>
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { isAdmin } from './auth.js';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+  <main class="grid gap-6 w-full max-w-md">
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAD83XBv0kg9yhr5TcewtVfLJRpDJmPic",
-            authDomain: "pelada-amigos-guarani.firebaseapp.com",
-            projectId: "pelada-amigos-guarani",
-            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
-            messagingSenderId: "978676164397",
-            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
-            measurementId: "G-LZ988SNECC"
-        };
+    <!-- Botão Criar Peladinha -->
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button id="btn-criar-peladinha"
+        class="w-full bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-lg shadow hover:scale-105 transition transform duration-300">
+        Peladinhas
+      </button>
+    </section>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <!-- Jogadores -->
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button onclick="window.location.href='jogadores.html'"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow transition duration-300">
+        Jogadores
+      </button>
+    </section>
 
-        async function criarPeladinha() {
-            try {
-                let dataAtual = new Date();
-                dataAtual.setHours(0, 0, 0, 0);
-                let jogadores = [];
+    <!-- Artilheiros -->
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button onclick="window.location.href='artilheiros.html'"
+        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg shadow transition duration-300">
+        Artilheiros
+      </button>
+    </section>
 
-                const docRef = await addDoc(collection(db, "peladinhas"), {
-                    dataPeladinha: Timestamp.fromDate(dataAtual),
-                    jogadores: jogadores
-                });
+    <!-- Regras -->
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button onclick="window.location.href='regras.html'"
+        class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow transition duration-300">
+        Regras
+      </button>
+    </section>
 
-                alert("Peladinha criada com sucesso! ID: " + docRef.id);
-            } catch (error) {
-                console.error("Erro ao criar peladinha:", error);
-                alert("Erro ao criar peladinha!");
-            }
-        }
+    <!-- Em Breve Buttons -->
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button disabled
+        class="w-full border-2 border-zinc-500 text-zinc-400 font-semibold py-3 rounded-lg bg-zinc-700 opacity-60 cursor-not-allowed flex flex-col items-center">
+        Presença
+        <span class="text-xs italic mt-1">Em breve...</span>
+      </button>
+    </section>
 
-        document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
-            window.location.href = "peladinhas.html";
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button disabled
+        class="w-full border-2 border-zinc-500 text-zinc-400 font-semibold py-3 rounded-lg bg-zinc-700 opacity-60 cursor-not-allowed flex flex-col items-center">
+        Churrasco
+        <span class="text-xs italic mt-1">Em breve...</span>
+      </button>
+    </section>
+
+    <section class="bg-zinc-800 p-6 rounded-xl shadow-md animate-fadeIn text-center">
+      <button disabled
+        class="w-full border-2 border-zinc-500 text-zinc-400 font-semibold py-3 rounded-lg bg-zinc-700 opacity-60 cursor-not-allowed flex flex-col items-center">
+        Sorteio Times
+        <span class="text-xs italic mt-1">Em breve...</span>
+      </button>
+    </section>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { isAdmin } from './auth.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAD83XBv0kg9yhr5TcewtVfLJRpDJmPic",
+      authDomain: "pelada-amigos-guarani.firebaseapp.com",
+      projectId: "pelada-amigos-guarani",
+      storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+      messagingSenderId: "978676164397",
+      appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+      measurementId: "G-LZ988SNECC"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function criarPeladinha() {
+      try {
+        let dataAtual = new Date();
+        dataAtual.setHours(0, 0, 0, 0);
+        let jogadores = [];
+
+        const docRef = await addDoc(collection(db, "peladinhas"), {
+          dataPeladinha: Timestamp.fromDate(dataAtual),
+          jogadores: jogadores
         });
-    </script>
+
+        alert("Peladinha criada com sucesso! ID: " + docRef.id);
+      } catch (error) {
+        console.error("Erro ao criar peladinha:", error);
+        alert("Erro ao criar peladinha!");
+      }
+    }
+
+    document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
+      window.location.href = "peladinhas.html";
+    });
+  </script>
+
+  <!-- Tailwind Animation Helper -->
+  <style>
+    .animate-fadeIn {
+      animation: fadeIn 0.7s ease-in-out both;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
 </body>
 </html>
