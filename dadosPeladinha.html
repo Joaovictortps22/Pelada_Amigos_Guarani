@@ -6,6 +6,7 @@
     <title>Dados da Peladinha</title>
     
     <script type="module">
+        import { isAdmin } from './auth.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
@@ -24,6 +25,29 @@
 
         function dataPeladinha(peladinha){
             return new Date(peladinha.dataPeladinha.seconds * 1000).toLocaleDateString("pt-BR");
+        }
+
+        function aplicarPermissoesUsuario() {
+            if (!isAdmin) {
+                // Remove o botão de encerrar peladinha
+                const botaoEncerrar = document.getElementById("botaoEncerrarPelada");
+                if (botaoEncerrar) {
+                    botaoEncerrar.remove();
+                }
+
+                // Remove o botão de edição de participantes
+                const botaoEditar = document.getElementById("botaoEditarParticipantes");
+                if (botaoEditar) {
+                    botaoEditar.remove();
+                }
+
+                // Desativa a edição de gols (remover ícones de bola ⚽)
+                document.querySelectorAll("#listaJogadores li span span[onclick]").forEach(el => {
+                    el.style.cursor = "default";
+                    el.removeAttribute("onclick");
+                    el.style.opacity = "0.9";
+                });
+            }
         }
 
         async function peladinhaDoc() {
@@ -85,6 +109,8 @@
             } else {
                 listaJogadores.innerHTML = "<li>Nenhum jogador cadastrado</li>";
             }
+
+            aplicarPermissoesUsuario();
         }
     
         window.abrirModalEdicao = async function () {
@@ -235,13 +261,12 @@
                 }
             }
 
-            // Atualiza o documento no Firestore
             await updateDoc(peladinhaRef, {
                 jogadores: novosJogadores
             });
 
             fecharModal();
-            await carregarDadosPeladinha(); // Atualiza a lista principal após salvar
+            await carregarDadosPeladinha();
         };
 
         let jogadorSelecionado = null;
@@ -283,22 +308,36 @@
             }
 
             const peladinha = peladinhaDocSnap.data();
+            const jogadores = peladinha.jogadores || [];
 
-            // Atualiza os gols na lista de jogadores da peladinha
-            peladinha.jogadores = peladinha.jogadores.map(j => {
-                if (j.id === jogadorSelecionado.id) {
-                    return { ...j, gols: novoValor };
+            // Atualiza os gols no array de jogadores da peladinha
+            const jogadoresAtualizados = jogadores.map(jogador => {
+                if (jogador.id === jogadorSelecionado.id) {
+                    return { ...jogador, gols: novoValor };
                 }
-                return j;
+                return jogador;
             });
 
-            // Atualiza a peladinha no Firestore
-            await updateDoc(peladinhaRef, {
-                jogadores: peladinha.jogadores
-            });
+            await updateDoc(peladinhaRef, { jogadores: jogadoresAtualizados });
+
+            // Atualiza o total de gols no modelo principal do jogador
+            const jogadorRef = doc(db, "jogadores", jogadorSelecionado.id);
+            const jogadorDocSnap = await getDoc(jogadorRef);
+
+            if (jogadorDocSnap.exists()) {
+                const jogadorData = jogadorDocSnap.data();
+                const totalGolsAtual = jogadorData.totalGols || 0;
+                const pontosAtual = jogadorData.pontos || 0;
+
+                const diferenca = novoValor - jogadorSelecionado.gols;
+                const novoTotalGols = Math.max(0, totalGolsAtual + diferenca); // evita negativos
+                const novoPontos = Math.max(0, pontosAtual + diferenca);
+
+                await updateDoc(jogadorRef, { totalGols: novoTotalGols, pontos: novoPontos});
+            }
 
             fecharModalGols();
-            carregarDadosPeladinha(); // Atualiza lista principal
+            await carregarDadosPeladinha();
         };
     
         document.addEventListener("DOMContentLoaded", carregarDadosPeladinha);
@@ -445,13 +484,69 @@
         .btn-salvar:hover {
             background-color: #00994d;
         }
+
+        #botaoEditarParticipantes {
+            background-color: #00cc66;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #botaoEditarParticipantes:hover {
+            background-color: #00b359;
+            transform: scale(1.03);
+        }
+
+        #botaoEditarParticipantes:active {
+            transform: scale(0.98);
+        }
+
+        #botaoEncerrarPelada {
+            background-color: #0041cc;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #botaoEncerrarPelada:hover {
+            background-color: #002db3;
+            transform: scale(1.03);
+        }
+
+        #botaoEncerrarPelada:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
-    <h1 id="tituloPeladinha">Dados da Peladinha</h1>
+    <h1 id="tituloPeladinha"></h1>
+
     <h3>Jogadores:</h3>
     <ul id="listaJogadores"></ul>
-    <button onclick="abrirModalEdicao()">Editar Participantes</button>
+
+    <div style="margin-bottom: 20px;">
+        <button onclick="abrirModalEdicao()" id="botaoEditarParticipantes">
+            ✏️ Editar Participantes
+        </button>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <button onclick="abrirModalEdicao()" id="botaoEncerrarPelada">
+            Encerrar Peladinha
+        </button>
+    </div>
 
     <div id="modalEdicao" class="modal">
         <div class="modal-content">
@@ -481,15 +576,5 @@
             </div>
         </div>
     </div>
-
-    <!-- <script>
-        function abrirModalEdicao() {
-            document.getElementById("modalEdicao").classList.add("ativo");
-        }
-
-        function fecharModal() {
-            document.getElementById("modalEdicao").classList.remove("ativo");
-        }
-    </script> -->
 </body>
 </html>

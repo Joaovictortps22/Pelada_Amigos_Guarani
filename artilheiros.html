@@ -32,17 +32,31 @@
       const jogadores = [];
       snapshot.forEach(doc => jogadores.push(doc.data()));
 
+      // Ordenar decrescente por total de gols
       jogadores.sort((a, b) => (b.totalGols ?? 0) - (a.totalGols ?? 0));
-      const maiorGols = jogadores[0]?.totalGols ?? 0;
+
+      const golsMap = jogadores.map(j => j.totalGols ?? 0);
+      const maiorGols = golsMap[0] ?? 0;
+      const segundoMaiorGols = golsMap.find(g => g < maiorGols) ?? 0;
+
+      // Jogadores com o maior número de gols
+      const lideres = jogadores.filter(j => (j.totalGols ?? 0) === maiorGols);
 
       jogadores.forEach(jogador => {
-        const temEstrela = (jogador.totalGols ?? 0) === maiorGols;
+        const gols = jogador.totalGols ?? 0;
+
+        // Aplica a estrela apenas se houver mais de um com o maior número
+        // e esse número for maior que o segundo colocado
+        const mostrarEstrela = gols === maiorGols && (
+          (lideres.length === 1) || (maiorGols > segundoMaiorGols)
+        );
+
         const div = document.createElement("div");
         div.className = "jogador-card";
         div.innerHTML = `
-          ${temEstrela ? '<span class="estrela">⭐</span>' : '<span class="estrela"></span>'}
+          ${mostrarEstrela ? '<span class="estrela">⭐</span>' : '<span class="estrela"></span>'}
           <span class="nome">${jogador.nome}</span>
-          <span class="gols">⚽ ${jogador.totalGols ?? 0}</span>
+          <span class="gols">⚽ ${gols}</span>
         `;
         lista.appendChild(div);
       });

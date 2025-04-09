@@ -1,89 +1,64 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toca No Seu Pai</title>
-    <link rel="stylesheet" href="estilos/style.css">
-
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-PT77XEZESM');
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Bem-vindo!</h2>
-    <header>
-        <h2>⚽ Toca No Seu Pai ⚽</h2>
-    </header>
+<body class="bg-black min-h-screen flex items-center justify-center">
 
-    <main>
-        <!-- Seção Criar Peladinha -->
-        <section class="nova-peladinha">
-            <h2>Tem pelada hoje?</h2>
-            <button id="btn-criar-peladinha" class="btn-criar">
-                <span>Criar peladinha</span>
-                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais">
-            </button>
-        </section>
+  <div class="bg-gray-900 bg-opacity-90 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-white text-center">
     
-        <!-- Container Principal -->
-        <section class="container">
-            <button onclick="window.location.href='jogadores.html'">Ver Jogadores</button>
-        </section>
-    
-        <section class="container">
-            <button class="btn-artilheiros" onclick="window.location.href='artilheiros.html'">Artilheiros</button>
-        </section>
-    
-        <!-- Novo container com botão para Regras -->
-        <section class="container">
-            <button class="btn-regras" onclick="window.location.href='regras.html'">Regras da Pelada</button>
-        </section>
-    </main>
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+    <h1 class="text-3xl font-bold mb-2">Bem-vindo!</h1>
+    <p class="text-sm text-gray-400 mb-6">Escolha como deseja acessar a plataforma:</p>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAD83XBv0kg9yhr5TcewtVfLJRpDJmPic",
-            authDomain: "pelada-amigos-guarani.firebaseapp.com",
-            projectId: "pelada-amigos-guarani",
-            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
-            messagingSenderId: "978676164397",
-            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
-            measurementId: "G-LZ988SNECC"
-        };
+    <!-- Botão para usuários comuns (sem senha) -->
+    <button
+      onclick="acessarComoUsuario()"
+      class="block w-full bg-green-500 hover:bg-green-600 transition-colors p-3 rounded-lg font-semibold text-white text-lg mb-6"
+    >
+      Acessar como Usuário Comum
+    </button>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <p class="text-sm text-gray-400 mb-2">Acesso para administradores</p>
 
-        async function criarPeladinha() {
-            try {
-                let dataAtual = new Date();
-                dataAtual.setHours(0, 0, 0, 0);
-                let jogadores = [];
+    <!-- Campo e botão para admins -->
+    <input
+      type="password"
+      id="senha"
+      placeholder="Digite a senha de admin"
+      class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3"
+    />
 
-                const docRef = await addDoc(collection(db, "peladinhas"), {
-                    dataPeladinha: Timestamp.fromDate(dataAtual),
-                    jogadores: jogadores
-                });
+    <button
+      onclick="verificarSenha()"
+      class="w-full bg-purple-600 hover:bg-purple-700 transition-colors p-3 rounded-lg font-semibold"
+    >
+      Entrar como Administrador
+    </button>
 
-                alert("Peladinha criada com sucesso! ID: " + docRef.id);
-            } catch (error) {
-                console.error("Erro ao criar peladinha:", error);
-                alert("Erro ao criar peladinha!");
-            }
-        }
+    <p id="mensagemErro" class="text-red-500 mt-3 text-sm hidden"></p>
+  </div>
 
-        document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
-            window.location.href = "peladinhas.html";
-        });
-    </script>
+  <script>
+    function acessarComoUsuario() {
+      localStorage.setItem('admin', 'false');
+      window.location.href = "home.html"; // ou qualquer página do usuário comum
+    }
+
+    function verificarSenha() {
+      const senha = document.getElementById("senha").value;
+      const erro = document.getElementById("mensagemErro");
+
+      if (senha === "12345") {
+        localStorage.setItem('admin', 'true');
+        window.location.href = "home.html"; // redireciona para a área admin
+      } else {
+        erro.textContent = "Senha incorreta.";
+        erro.classList.remove("hidden");
+      }
+    }
+  </script>
 </body>
 </html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toca No Seu Pai</title>
+    <link rel="stylesheet" href="estilos/style.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-PT77XEZESM');
+    </script>
+</head>
+<body>
+    <header>
+        <h2>⚽ Toca No Seu Pai ⚽</h2>
+    </header>
+
+    <main>
+        <!-- Seção Criar Peladinha -->
+        <section class="nova-peladinha">
+            <h2>Tem pelada hoje?</h2>
+            <button id="btn-criar-peladinha" class="btn-criar">
+                <span>Criar peladinha</span>
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais">
+            </button>
+        </section>
+    
+        <!-- Container Principal -->
+        <section class="container">
+            <button onclick="window.location.href='jogadores.html'">Ver Jogadores</button>
+        </section>
+    
+        <section class="container">
+            <button class="btn-artilheiros" onclick="window.location.href='artilheiros.html'">Artilheiros</button>
+        </section>
+    
+        <!-- Novo container com botão para Regras -->
+        <section class="container">
+            <button class="btn-regras" onclick="window.location.href='regras.html'">Regras da Pelada</button>
+        </section>
+    </main>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD83XBv0kg9yhr5TcewtVfLJRpDJmPic",
+            authDomain: "pelada-amigos-guarani.firebaseapp.com",
+            projectId: "pelada-amigos-guarani",
+            storageBucket: "pelada-amigos-guarani.firebasestorage.app",
+            messagingSenderId: "978676164397",
+            appId: "1:978676164397:web:21f70c97b85180fa48d5a4",
+            measurementId: "G-LZ988SNECC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function criarPeladinha() {
+            try {
+                let dataAtual = new Date();
+                dataAtual.setHours(0, 0, 0, 0);
+                let jogadores = [];
+
+                const docRef = await addDoc(collection(db, "peladinhas"), {
+                    dataPeladinha: Timestamp.fromDate(dataAtual),
+                    jogadores: jogadores
+                });
+
+                alert("Peladinha criada com sucesso! ID: " + docRef.id);
+            } catch (error) {
+                console.error("Erro ao criar peladinha:", error);
+                alert("Erro ao criar peladinha!");
+            }
+        }
+
+        document.getElementById("btn-criar-peladinha").addEventListener("click", function () {
+            window.location.href = "peladinhas.html";
+        });
+    </script>
+</body>
+</html>
