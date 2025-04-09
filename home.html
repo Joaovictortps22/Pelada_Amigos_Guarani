@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toca No Seu Pai</title>
-    <link rel="stylesheet" href="estilos/style.css">
+    <link rel="stylesheet" href="estilos/style-home.css">
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PT77XEZESM"></script>
@@ -22,17 +22,16 @@
 
     <main>
         <!-- Seção Criar Peladinha -->
-        <section class="nova-peladinha">
-            <h2>Tem pelada hoje?</h2>
-            <button id="btn-criar-peladinha" class="btn-criar">
-                <span>Criar peladinha</span>
-                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais">
+        <section class="container">
+            <button id="btn-criar-peladinha">
+                Peladinhas
+                <!-- <img src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Ícone de Mais"> -->
             </button>
         </section>
     
         <!-- Container Principal -->
         <section class="container">
-            <button onclick="window.location.href='jogadores.html'">Ver Jogadores</button>
+            <button onclick="window.location.href='jogadores.html'">Jogadores</button>
         </section>
     
         <section class="container">
@@ -41,11 +40,33 @@
     
         <!-- Novo container com botão para Regras -->
         <section class="container">
-            <button class="btn-regras" onclick="window.location.href='regras.html'">Regras da Pelada</button>
+            <button class="btn-regras" onclick="window.location.href='regras.html'">Regras</button>
+        </section>
+
+        <section class="container">
+            <button class="btn-em-breve">
+                Presença
+                <span class="tag-em-breve">Em breve...</span>
+            </button>
+        </section>
+        
+        <section class="container">
+            <button class="btn-em-breve">
+                Churrasco
+                <span class="tag-em-breve">Em breve...</span>
+            </button>
+        </section>
+        
+        <section class="container">
+            <button class="btn-em-breve">
+                Sorteio Times
+                <span class="tag-em-breve">Em breve...</span>
+            </button>
         </section>
     </main>
     <!-- Firebase SDK -->
     <script type="module">
+        import { isAdmin } from './auth.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
         import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 

@@ -31,19 +31,39 @@
             const lista = document.getElementById("listaJogadores");
             lista.innerHTML = "";
             const snapshot = await getDocs(jogadoresRef);
+            const jogadores = [];
+
             snapshot.forEach(docSnapshot => {
                 const jogador = docSnapshot.data();
                 const id = docSnapshot.id;
 
-                // Só adiciona se for ativo
                 if (jogador.active === true) {
-                    const item = document.createElement("li");
-                    item.innerHTML = `${jogador.nome}`;
-                    item.classList.add("jogador-item");
-                    item.onclick = () => selecionarJogador(id, item);
-                    lista.appendChild(item);
+                    jogadores.push({ id, nome: jogador.nome });
                 }
             });
+
+            // Ordena por nome
+            jogadores.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            jogadores.forEach(({ id, nome }) => {
+                const card = document.createElement("div");
+                card.classList.add("card-jogador");
+                card.innerHTML = `
+                    <p class="nome-jogador">${nome}</p>
+                    <span class="check">&#10004;</span>
+                `;
+                card.onclick = () => selecionarJogador(id, card);
+                lista.appendChild(card);
+            });
+
+            atualizarContador();
+        }
+
+        function atualizarContador() {
+            const contador = document.getElementById("contadorSelecionados");
+            if (contador) {
+                contador.textContent = `Selecionados: ${jogadoresSelecionados.length}`;
+            }
         }
 
         async function carregarPeladinhas() {
@@ -79,6 +99,7 @@
                 jogadoresSelecionados.push(id);
                 item.classList.add("selecionado");
             }
+            atualizarContador();
         }
 
         async function criarPeladinha() {
@@ -87,8 +108,27 @@
                 return;
             }
 
-            const dataPeladinha = new Date();
-            dataPeladinha.setHours(0, 0, 0, 0);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            // Verifica se já existe uma peladinha para hoje
+            const q = query(peladinhasRef, orderBy("dataPeladinha", "desc"));
+            const snapshot = await getDocs(q);
+
+            let existeHoje = false;
+
+            snapshot.forEach(docSnapshot => {
+                const data = docSnapshot.data().dataPeladinha.toDate();
+                data.setHours(0, 0, 0, 0);
+                if (data.getTime() === hoje.getTime()) {
+                    existeHoje = true;
+                }
+            });
+
+            if (existeHoje) {
+                abrirModal("Atenção", "Já existe uma peladinha criada para hoje. Só é permitido criar uma por dia.");
+                return;
+            }
 
             const jogadoresFormatados = jogadoresSelecionados.map(id => ({
                 id: id,
@@ -96,11 +136,14 @@
             }));
 
             await addDoc(peladinhasRef, {
-                dataPeladinha: dataPeladinha,
+                dataPeladinha: hoje,
                 jogadores: jogadoresFormatados
             });
 
             abrirModal("Sucesso", "Peladinha criada com sucesso!");
+
+            jogadoresSelecionados = [];
+            carregarJogadores(); // para desmarcar os selecionados
             carregarPeladinhas();
         }
 
@@ -130,7 +173,6 @@
                 document.getElementById("btnCriarPeladinha").addEventListener("click", criarPeladinha);
                 carregarJogadores();
             } else {
-                document.getElementById("tituloPaginaPeladinhas").innerText = "Peladinhas";
                 document.getElementById("listaJogadores").style.display = "none";
                 document.getElementById("tituloListaJogadores").style.display = "none";
                 document.getElementById("btnCriarPeladinha").style.display = "none";
@@ -151,6 +193,56 @@
         .card-peladinha { background: #1e1e1e; padding: 20px; margin: 10px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .card-peladinha { margin-top: 35px;}
         #modal button { margin-top: 10px; }
+        #listaJogadores {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .card-jogador {
+            background-color: #1e1e1e;
+            color: white;
+            border: 2px solid transparent;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 150px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .card-jogador:hover {
+            transform: scale(1.05);
+            border-color: #1db954;
+        }
+
+        .card-jogador.selecionado {
+            background-color: #1db954;
+            color: black;
+            border-color: #fff;
+        }
+
+        .card-jogador .check {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 20px;
+            display: none;
+        }
+
+        .card-jogador.selecionado .check {
+            display: block;
+        }
+
+        .nome-jogador {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
         #modal-overlay {
             display: none;
             position: fixed;
@@ -176,7 +268,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 id="tituloPaginaPeladinhas">Tem peladinha hoje?</h1>
+        <h1 id="tituloPaginaPeladinhas">Peladinhas</h1>
         <h3 id="tituloListaJogadores">Selecione os jogadores:</h3>
         <ul id="listaJogadores"></ul>
         <button id="btnCriarPeladinha" class="button-criar">Criar Peladinha</button>

@@ -147,18 +147,29 @@
             // Atualizar a data no título do modal
             document.getElementById("dataTituloPeladinha").innerText = `no dia ${dataPeladinha(peladinha)}`;
 
-            // Obter os jogadores que estão na peladinha
             const jogadoresNaPeladinha = peladinha.jogadores || [];
 
             // Obter a lista geral de jogadores
             const jogadoresSnapshot = await getDocs(collection(db, "jogadores"));
+            let jogadoresArray = [];
+
             jogadoresSnapshot.forEach(doc => {
                 const jogador = doc.data();
                 const jogadorId = doc.id;
 
                 if (!jogador.active) return;
 
-                const jogadorNaPeladinha = jogadoresNaPeladinha.find(j => j.id === jogadorId);
+                jogadoresArray.push({
+                    id: jogadorId,
+                    nome: jogador.nome
+                });
+            });
+
+            // Ordenar em ordem alfabética
+            jogadoresArray.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            jogadoresArray.forEach(({ id, nome }) => {
+                const jogadorNaPeladinha = jogadoresNaPeladinha.find(j => j.id === id);
                 const golsNaPeladinha = jogadorNaPeladinha ? jogadorNaPeladinha.gols : 0;
                 const estaNaPeladinha = !!jogadorNaPeladinha;
 
@@ -170,7 +181,7 @@
                 item.style.borderBottom = "1px solid #ccc";
 
                 const nomeSpan = document.createElement("span");
-                nomeSpan.textContent = jogador.nome;
+                nomeSpan.textContent = nome;
 
                 const botaoEstado = document.createElement("button");
                 botaoEstado.innerText = estaNaPeladinha ? "Dentro" : "Fora";
@@ -178,7 +189,6 @@
                 botaoEstado.classList.add("botao-estado");
 
                 if (golsNaPeladinha > 0) {
-                    // Estiliza como desabilitado visualmente
                     item.style.opacity = "0.8";
                     botaoEstado.disabled = true;
                     botaoEstado.style.cursor = "not-allowed";
@@ -543,7 +553,7 @@
     </div>
 
     <div style="margin-bottom: 20px;">
-        <button onclick="abrirModalEdicao()" id="botaoEncerrarPelada">
+        <button id="botaoEncerrarPelada">
             Encerrar Peladinha
         </button>
     </div>

@@ -76,13 +76,43 @@ header {
     transform: scale(1.05);
 }
 
+.btn-em-breve {
+    opacity: 0.5;
+}
+
+.btn-em-breve {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 2px dashed #aaa;
+    position: relative;
+    cursor: default;
+    padding: 12px 20px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.btn-em-breve:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.02);
+}
+
+.tag-em-breve {
+    font-size: 12px;
+    color: #888;
+    margin-top: 6px;
+    font-style: italic;
+}
+
 /* Container Principal */
 .container {
     background-color: #1e1e1e;
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    width: 90%;
     max-width: 400px;
     box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
     animation: fadeIn 1s ease-in-out;
@@ -112,7 +142,6 @@ body h2{
     cursor: pointer;
     transition: 0.3s;
     box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
-
     min-width: 180px;
     text-align: center;
     white-space: nowrap;

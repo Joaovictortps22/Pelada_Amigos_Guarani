@@ -16,6 +16,7 @@
   </script>
 
   <script type="module">
+    import { isAdmin } from './auth.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, updateDoc, doc }
       from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -41,22 +42,35 @@
       listaInativos.innerHTML = "";
 
       const snapshot = await getDocs(jogadoresRef);
+      const jogadores = [];
+
       snapshot.forEach(docSnapshot => {
-        const jogador = docSnapshot.data();
-        const id = docSnapshot.id;
+        jogadores.push({
+          id: docSnapshot.id,
+          ...docSnapshot.data()
+        });
+      });
+
+      // Ordenar jogadores por nome
+      jogadores.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+      jogadores.forEach(jogador => {
         const item = document.createElement("li");
 
-        item.innerHTML = `
-          ${jogador.nome}
+        const desabilitaBtn = !isAdmin ? 'disabled style="opacity: 0.6; cursor: not-allowed;"' : '';
+
+        const botoes = `
           <div class="icons">
-            <button class="icon-btn" onclick="abrirModalEdicao('${id}', '${jogador.nome}')">
+            <button class="icon-btn" onclick="abrirModalEdicao('${jogador.id}', '${jogador.nome}')" ${!isAdmin ? 'disabled style="opacity: 0.6; cursor: not-allowed;"' : ''}>
               <img src="https://cdn-icons-png.flaticon.com/512/1160/1160515.png" alt="Editar">
             </button>
-            <button class="status-btn ${jogador.active ? 'ativo' : 'inativo'}" onclick="alterarStatus('${id}', ${jogador.active})">
+            <button class="status-btn ${jogador.active ? 'ativo' : 'inativo'}" onclick="alterarStatus('${jogador.id}', ${jogador.active})" ${desabilitaBtn}>
               ${jogador.active ? 'Ativo' : 'Inativo'}
             </button>
           </div>
         `;
+
+        item.innerHTML = `${jogador.nome} ${botoes}`;
 
         if (jogador.active) {
           listaAtivos.appendChild(item);
@@ -67,6 +81,8 @@
     }
 
     document.getElementById("btnAdicionar").addEventListener("click", async () => {
+      if (!isAdmin) return; // impede ação se não for admin
+
       const nome = document.getElementById("inputNome").value;
       const totalGols = 0;
       const active = true;
@@ -78,6 +94,7 @@
     });
 
     window.abrirModalEdicao = (id, nome) => {
+      if (!isAdmin) return;
       document.getElementById("modalEdicao").style.display = "flex";
       document.getElementById("inputEditarNome").value = nome;
       document.getElementById("confirmarEdicao").onclick = () => editarJogador(id);
@@ -88,6 +105,7 @@
     };
 
     window.editarJogador = async (id) => {
+      if (!isAdmin) return;
       const novoNome = document.getElementById("inputEditarNome").value;
       if (novoNome.trim() !== "") {
         const jogadorDoc = doc(db, "jogadores", id);
@@ -98,12 +116,17 @@
     };
 
     window.alterarStatus = async (id, statusAtual) => {
+      if (!isAdmin) return;
       const jogadorDoc = doc(db, "jogadores", id);
       await updateDoc(jogadorDoc, { active: !statusAtual });
       carregarJogadores();
     };
 
     carregarJogadores();
+
+    if (!isAdmin) {
+      document.getElementById("btnAdicionar").style.display = "none";
+    }
   </script>
 </head>
 <body>
